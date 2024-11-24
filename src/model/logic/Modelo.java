@@ -16,7 +16,6 @@ import model.data_structures.GrafoListaAdyacencia;
 import model.data_structures.ILista;
 import model.data_structures.ITablaSimbolos;
 import model.data_structures.Landing;
-import model.data_structures.ListaEncadenada;
 import model.data_structures.NodoTS;
 import model.data_structures.NullException;
 import model.data_structures.PilaEncadenada;
@@ -109,160 +108,18 @@ public class Modelo {
 
 	}
 	
-	
-	public String req1String(String punto1, String punto2)
-	{
-		ITablaSimbolos tabla= grafo.getSSC();
-		ILista lista= tabla.valueSet();
-		int max=0;
-		for(int i=1; i<= lista.size(); i++)
-		{
-			try
-			{
-				if((int) lista.getElement(i)> max)
-				{
-					max= (int) lista.getElement(i);
-				}
-			}
-			catch(PosException | VacioException  e)
-			{
-				System.out.println(e.toString());
-			}
-			
-		}
-		
-		String fragmento="La cantidad de componentes conectados es: " + max;
-		
-		try 
-		{
-			String codigo1= (String) nombrecodigo.get(punto1);
-			String codigo2= (String) nombrecodigo.get(punto2);
-			Vertex vertice1= (Vertex) ((ILista) landingidtabla.get(codigo1)).getElement(1);
-			Vertex vertice2= (Vertex) ((ILista) landingidtabla.get(codigo2)).getElement(1);
-			
-			int elemento1= (int) tabla.get(vertice1.getId());
-			int elemento2= (int) tabla.get(vertice2.getId());
-			
-			if(elemento1== elemento2)
-			{
-				fragmento+= "\n Los landing points pertenecen al mismo clúster";
-			}
-			else
-			{
-				fragmento+= "\n Los landing points no pertenecen al mismo clúster";
-			}
-		} 
-		catch (PosException | VacioException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		return fragmento;
-		
-	}
+	public String req1String(String punto1, String punto2) {
+        return Requerimiento1.req1String(grafo, nombrecodigo, landingidtabla, punto1, punto2);
+    }
 	
 	public String req2String()
 	{
-		String fragmento="";
-		
-		ILista lista= landingidtabla.valueSet();
-		
-		int cantidad=0;
-		
-		int contador=0;
-		
-		for(int i=1; i<= lista.size(); i++)
-		{
-			try 
-			{
-				if( ( (ILista) lista.getElement(i) ).size()>1 && contador<=10)
-				{
-					Landing landing= (Landing) ((Vertex) ((ILista) lista.getElement(i) ).getElement(1)).getInfo();
-					
-					for(int j=1; j<=((ILista) lista.getElement(i)).size(); j++)
-					{
-						cantidad+= ((Vertex) ((ILista) lista.getElement(i)).getElement(j)).edges().size();
-					}
-					
-					fragmento+= "\n Landing " + "\n Nombre: " + landing.getName() + "\n País: " + landing.getPais() + "\n Id: " + landing.getId() + "\n Cantidad: " + cantidad;
-					
-					contador++;
-				}
-			}
-			catch (PosException | VacioException e) 
-			{
-				e.printStackTrace();
-			}
-			
-		}
-		
-		return fragmento;
-		
+		return Requerimiento2.req2String(landingidtabla);
 	}
 	
 	public String req3String(String pais1, String pais2)
 	{
-		Country pais11= (Country) paises.get(pais1);
-		Country pais22= (Country) paises.get(pais2);
-		String capital1=pais11.getCapitalName();
-		String capital2=pais22.getCapitalName();
-
-		PilaEncadenada pila= grafo.minPath(capital1, capital2);
-
-		float distancia=0;
-
-		String fragmento="Ruta: ";
-
-		float disttotal=0;
-		
-		double longorigen=0;
-		double longdestino=0;
-		double latorigen=0;
-		double latdestino=0;
-		String origennombre="";
-		String destinonombre="";
-
-		while(!pila.isEmpty())
-		{
-			Edge arco= ((Edge)pila.pop());
-
-			if(arco.getSource().getInfo().getClass().getName().equals("model.data_structures.Landing"))
-			{
-				longorigen=((Landing)arco.getSource().getInfo()).getLongitude();
-				latorigen=((Landing)arco.getSource().getInfo()).getLongitude();
-				origennombre=((Landing)arco.getSource().getInfo()).getLandingId();
-			}
-			if(arco.getSource().getInfo().getClass().getName().equals("model.data_structures.Country"))
-			{
-				longorigen=((Country)arco.getSource().getInfo()).getLongitude();
-				latorigen=((Country)arco.getSource().getInfo()).getLongitude();
-				origennombre=((Country)arco.getSource().getInfo()).getCapitalName();
-			}
-			if (arco.getDestination().getInfo().getClass().getName().equals("model.data_structures.Landing"))
-			{
-				latdestino=((Landing)arco.getDestination().getInfo()).getLatitude();
-				longdestino=((Landing)arco.getDestination().getInfo()).getLatitude();
-				destinonombre=((Landing)arco.getDestination().getInfo()).getLandingId();
-			}
-			if(arco.getDestination().getInfo().getClass().getName().equals("model.data_structures.Country"))
-			{
-				longdestino=((Country)arco.getDestination().getInfo()).getLatitude();
-				latdestino=((Country)arco.getDestination().getInfo()).getLatitude();
-				destinonombre=((Country)arco.getDestination().getInfo()).getCapitalName();
-			}
-
-			distancia = distancia(longdestino,latdestino, longorigen, latorigen);
-			fragmento+= "\n \n Origen: " +origennombre + "  Destino: " + destinonombre + "  Distancia: " + distancia;
-			disttotal+=distancia;
-
-		}
-
-		fragmento+= "\n Distancia total: " + disttotal;	
-
-		return fragmento;
-		
+		return Requerimiento3.req3String(grafo, paises, pais1, pais2);
 	}
 	
 	public String req4String()
@@ -386,7 +243,7 @@ public class Modelo {
 						pais= (Country) paises.get(landing.getPais());
 						countries.insertElement(pais, countries.size() + 1);
 						
-						float distancia= distancia(pais.getLongitude(), pais.getLatitude(), landing.getLongitude(), landing.getLatitude());
+						float distancia= Distancia.calcularDistancia(pais.getLongitude(), pais.getLatitude(), landing.getLongitude(), landing.getLatitude());
 							
 						pais.setDistlan(distancia);
 					}
@@ -752,14 +609,14 @@ public class Modelo {
 
 			if(pais1!=null)
 			{
-				float weight=distancia(pais1.getLongitude(), pais1.getLatitude(), landing1.getLongitude(), landing1.getLatitude());
+				float weight=Distancia.calcularDistancia(pais1.getLongitude(), pais1.getLatitude(), landing1.getLongitude(), landing1.getLatitude());
 
 				grafo.addEdge(pais1.getCapitalName(),landing1.getLandingId()+ cableid , weight);
 			}
 	
 			if(pais2!=null)
 			{
-				float weight2=distancia(pais2.getLongitude(), pais2.getLatitude(), landing1.getLongitude(), landing1.getLatitude());
+				float weight2=Distancia.calcularDistancia(pais2.getLongitude(), pais2.getLatitude(), landing1.getLongitude(), landing1.getLatitude());
 
 				grafo.addEdge(pais2.getCapitalName(),landing2.getLandingId()+ cableid , weight2);
 
@@ -774,12 +631,12 @@ public class Modelo {
 	
 					if(existe1==null)
 					{
-						float weight3=distancia(landing1.getLongitude(), landing1.getLatitude(), landing2.getLongitude(), landing2.getLatitude());
+						float weight3=Distancia.calcularDistancia(landing1.getLongitude(), landing1.getLatitude(), landing2.getLongitude(), landing2.getLatitude());
 						grafo.addEdge(landing1.getLandingId() + cableid, landing2.getLandingId() + cableid, weight3);
 					}
 					else
 					{
-						float weight3=distancia(landing1.getLongitude(), landing1.getLatitude(), landing2.getLongitude(), landing2.getLatitude());
+						float weight3=Distancia.calcularDistancia(landing1.getLongitude(), landing1.getLatitude(), landing2.getLongitude(), landing2.getLatitude());
 						float peso3= existe1.getWeight();
 	
 						if(weight3> peso3)
@@ -869,35 +726,6 @@ public class Modelo {
 			e.printStackTrace();
 		}
 		
-	
-		
-	
-}
-	
-	private static float distancia(double lon1, double lat1, double lon2, double lat2) 
-	{
-
-		double earthRadius = 6371; // km
-
-		lat1 = Math.toRadians(lat1);
-		lon1 = Math.toRadians(lon1);
-		lat2 = Math.toRadians(lat2);
-		lon2 = Math.toRadians(lon2);
-
-		double dlon = (lon2 - lon1);
-		double dlat = (lat2 - lat1);
-
-		double sinlat = Math.sin(dlat / 2);
-		double sinlon = Math.sin(dlon / 2);
-
-		double a = (sinlat * sinlat) + Math.cos(lat1)*Math.cos(lat2)*(sinlon*sinlon);
-		double c = 2 * Math.asin (Math.min(1.0, Math.sqrt(a)));
-
-		double distance = earthRadius * c;
-
-		return (int) distance;
-
 	}
-
-
+	
 }
