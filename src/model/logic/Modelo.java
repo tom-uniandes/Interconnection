@@ -16,7 +16,6 @@ import model.data_structures.GrafoListaAdyacencia;
 import model.data_structures.ILista;
 import model.data_structures.ITablaSimbolos;
 import model.data_structures.Landing;
-import model.data_structures.ListaEncadenada;
 import model.data_structures.NodoTS;
 import model.data_structures.NullException;
 import model.data_structures.PilaEncadenada;
@@ -109,97 +108,13 @@ public class Modelo {
 
 	}
 	
-	
-	public String req1String(String punto1, String punto2)
-	{
-		ITablaSimbolos tabla= grafo.getSSC();
-		ILista lista= tabla.valueSet();
-		int max=0;
-		for(int i=1; i<= lista.size(); i++)
-		{
-			try
-			{
-				if((int) lista.getElement(i)> max)
-				{
-					max= (int) lista.getElement(i);
-				}
-			}
-			catch(PosException | VacioException  e)
-			{
-				System.out.println(e.toString());
-			}
-			
-		}
-		
-		String fragmento="La cantidad de componentes conectados es: " + max;
-		
-		try 
-		{
-			String codigo1= (String) nombrecodigo.get(punto1);
-			String codigo2= (String) nombrecodigo.get(punto2);
-			Vertex vertice1= (Vertex) ((ILista) landingidtabla.get(codigo1)).getElement(1);
-			Vertex vertice2= (Vertex) ((ILista) landingidtabla.get(codigo2)).getElement(1);
-			
-			int elemento1= (int) tabla.get(vertice1.getId());
-			int elemento2= (int) tabla.get(vertice2.getId());
-			
-			if(elemento1== elemento2)
-			{
-				fragmento+= "\n Los landing points pertenecen al mismo clúster";
-			}
-			else
-			{
-				fragmento+= "\n Los landing points no pertenecen al mismo clúster";
-			}
-		} 
-		catch (PosException | VacioException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		return fragmento;
-		
-	}
+	public String req1String(String punto1, String punto2) {
+        return Requerimiento1.req1String(grafo, nombrecodigo, landingidtabla, punto1, punto2);
+    }
 	
 	public String req2String()
 	{
-		String fragmento="";
-		
-		ILista lista= landingidtabla.valueSet();
-		
-		int cantidad=0;
-		
-		int contador=0;
-		
-		for(int i=1; i<= lista.size(); i++)
-		{
-			try 
-			{
-				if( ( (ILista) lista.getElement(i) ).size()>1 && contador<=10)
-				{
-					Landing landing= (Landing) ((Vertex) ((ILista) lista.getElement(i) ).getElement(1)).getInfo();
-					
-					for(int j=1; j<=((ILista) lista.getElement(i)).size(); j++)
-					{
-						cantidad+= ((Vertex) ((ILista) lista.getElement(i)).getElement(j)).edges().size();
-					}
-					
-					fragmento+= "\n Landing " + "\n Nombre: " + landing.getName() + "\n País: " + landing.getPais() + "\n Id: " + landing.getId() + "\n Cantidad: " + cantidad;
-					
-					contador++;
-				}
-			}
-			catch (PosException | VacioException e) 
-			{
-				e.printStackTrace();
-			}
-			
-		}
-		
-		return fragmento;
-		
+		return Requerimiento2.req2String(landingidtabla);
 	}
 	
 	public String req3String(String pais1, String pais2)
