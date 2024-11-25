@@ -105,81 +105,96 @@ public class Vertex<K extends Comparable<K>,V  extends Comparable <V>> implement
 	{
 		return arcos;
 	}
-	
-	public void bfs()
-	{
-		ColaEncadenada<Vertex<K, V>> cola= new ColaEncadenada<Vertex<K, V>>();
+
+	public void bfs() {
+		ColaEncadenada<Vertex<K, V>> cola = new ColaEncadenada<>();
 		mark();
 		cola.enqueue(this);
-		while(cola.peek() !=null)
-		{
-			Vertex<K, V> actual= cola.dequeue();
-			for(int i=1; i<=actual.arcos.size(); i++)
-			{
-				Vertex<K, V> dest;
-				try 
-				{
-					dest = actual.edges().getElement(i).getDestination();
-					if(dest.marked)
-					{
-						mark();
-						cola.enqueue(dest);
-					}
-				} 
-				catch (PosException | VacioException e) 
-				{
-					e.printStackTrace();
-				}
-			}
+
+		while (cola.peek() != null) {
+			Vertex<K, V> actual = cola.dequeue();
+			processNeighbors(actual, cola);
 		}
 	}
-	
-	public void dfs(Edge<K, V> edgeTo)
-	{
-		mark();
-		for(int i=1; i<=arcos.size(); i++)
-		{
-			Vertex<K, V> dest;
-			try 
-			{
-				dest = arcos.getElement(i).getDestination();
-				if(!dest.marked)
-				{
-					dest.dfs(arcos.getElement(i));
+
+	private void processNeighbors(Vertex<K, V> actual, ColaEncadenada<Vertex<K, V>> cola) {
+		for (int i = 1; i <= actual.edges().size(); i++) {
+			try {
+				Vertex<K, V> destino = getDestination(actual, i);
+				if (!destino.marked) {
+					markAndEnqueue(destino, cola);
 				}
-			} 
-			catch (PosException | VacioException e) 
-			{
+			} catch (PosException | VacioException e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	
-	public void topologicalOrder( ColaEncadenada<Vertex<K, V>> pre, ColaEncadenada<Vertex<K, V>> post, PilaEncadenada<Vertex<K, V>> reversePost )
+
+	private Vertex<K, V> getDestination(Vertex<K, V> actual, int index) throws PosException, VacioException {
+		return actual.edges().getElement(index).getDestination();
+	}
+
+	private void markAndEnqueue(Vertex<K, V> vertex, ColaEncadenada<Vertex<K, V>> cola) {
+		vertex.mark();
+		cola.enqueue(vertex);
+	}
+
+
+	public void dfs(Edge<K, V> edgeTo) {
+		mark();
+		processEdges();
+	}
+
+	private void processEdges() {
+		for (int i = 1; i <= arcos.size(); i++) {
+			try {
+				Vertex<K, V> destino = getDestination(i);
+				if (!destino.marked) {
+					destino.dfs(arcos.getElement(i));
+				}
+			} catch (PosException | VacioException e) {
+				handleException(e);
+			}
+		}
+	}
+
+	private Vertex<K, V> getDestination(int index) throws PosException, VacioException {
+		return arcos.getElement(index).getDestination();
+	}
+
+	private void handleException(Exception e) {
+		e.printStackTrace();
+	}
+
+
+
+	public void topologicalOrder(ColaEncadenada<Vertex<K, V>> pre,
+								 ColaEncadenada<Vertex<K, V>> post,
+								 PilaEncadenada<Vertex<K, V>> reversePost)
 	{
 		mark();
 		pre.enqueue(this);
-		
-		for(int i=1; i<= arcos.size(); i++ )
-		{
-			Vertex<K, V> destino;
+		processEdges(pre, post, reversePost);
+		post.enqueue(this);
+		reversePost.push(this);
+	}
+
+	private void processEdges(ColaEncadenada<Vertex<K, V>> pre,
+							  ColaEncadenada<Vertex<K, V>> post,
+							  PilaEncadenada<Vertex<K, V>> reversePost)
+	{
+		for (int i = 1; i <= arcos.size(); i++) {
 			try {
-				destino = arcos.getElement(i).getDestination();
-				if(!destino.getMark())
-				{
+				Vertex<K, V> destino = getDestination(i);
+				if (!destino.getMark()) {
 					destino.topologicalOrder(pre, post, reversePost);
 				}
 			} catch (PosException | VacioException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				handleException(e);
 			}
-
 		}
-		
-		post.enqueue(this);
-		reversePost.push(this);
-		
 	}
+
 
 
 
@@ -287,45 +302,61 @@ public class Vertex<K extends Comparable<K>,V  extends Comparable <V>> implement
 		 
 		 return tablaResultado;
 	}
-	
-	public void relaxDijkstra(ITablaSimbolos<K, NodoTS<Float, Edge<K, V>>> tablaResultado, MinPQIndexada<Float, K, Edge<K, V>> colaIndexada, Vertex<K, V> actual, float pesoAcumulado)
+
+	public void relaxDijkstra(ITablaSimbolos<K, NodoTS<Float, Edge<K, V>>> tablaResultado,
+							  MinPQIndexada<Float, K, Edge<K, V>> colaIndexada,
+							  Vertex<K, V> actual, float pesoAcumulado)
 	{
 		actual.mark();
-		for(int i=1; i<=actual.edges().size(); i++)
-		{
-			Edge<K, V> arcoActual;
-			try 
-			{
-				arcoActual = actual.edges().getElement(i);
-				Vertex<K, V> destino= arcoActual.getDestination();
-				float peso= arcoActual.getWeight();
-				if(!destino.getMark())
-				{
-					NodoTS<Float, Edge<K, V>>llegadaDestino= tablaResultado.get(destino.getId());
-					
-					if(llegadaDestino== null)
-					{
-						tablaResultado.put(destino.getId(), new NodoTS<Float, Edge<K, V>>(pesoAcumulado + peso, arcoActual));
-						colaIndexada.insert(peso+ pesoAcumulado, destino.getId(), arcoActual);
-						
-					}
-					else if(llegadaDestino.getKey()>(pesoAcumulado + peso))
-					{
-						llegadaDestino.setKey(pesoAcumulado + peso);
-						llegadaDestino.setValue(arcoActual);
-						colaIndexada.changePriority(destino.getId(), pesoAcumulado + peso, arcoActual);
-						
-					}
-				}
-			} 
-			catch (PosException | VacioException e) 
-			{
-				e.printStackTrace();
+
+		for (int i = 1; i <= actual.edges().size(); i++) {
+			try {
+				Edge<K, V> arcoActual = actual.edges().getElement(i);
+				processEdge(tablaResultado, colaIndexada, arcoActual, pesoAcumulado);
+			} catch (PosException | VacioException e) {
+				e.printStackTrace(); // Handle exception appropriately
 			}
-			
 		}
 	}
-	
-	
-	
+
+	private void processEdge(ITablaSimbolos<K, NodoTS<Float, Edge<K, V>>> tablaResultado,
+							 MinPQIndexada<Float, K, Edge<K, V>> colaIndexada,
+							 Edge<K, V> arcoActual, float pesoAcumulado)
+	{
+		Vertex<K, V> destino = arcoActual.getDestination();
+		if (!destino.getMark()) {
+			float peso = arcoActual.getWeight();
+			processDestination(tablaResultado, colaIndexada, destino, pesoAcumulado, peso, arcoActual);
+		}
+	}
+
+	private void processDestination(ITablaSimbolos<K, NodoTS<Float, Edge<K, V>>> tablaResultado,
+									MinPQIndexada<Float, K, Edge<K, V>> colaIndexada,
+									Vertex<K, V> destino, float pesoAcumulado, float peso, Edge<K, V> arcoActual)
+	{
+		NodoTS<Float, Edge<K, V>> llegadaDestino = tablaResultado.get(destino.getId());
+
+		if (llegadaDestino == null) {
+			insertNewDestination(tablaResultado, colaIndexada, destino, pesoAcumulado, peso, arcoActual);
+		} else if (llegadaDestino.getKey() > (pesoAcumulado + peso)) {
+			updateDestination(llegadaDestino, colaIndexada, destino, pesoAcumulado, peso, arcoActual);
+		}
+	}
+
+	private void insertNewDestination(ITablaSimbolos<K, NodoTS<Float, Edge<K, V>>> tablaResultado,
+									  MinPQIndexada<Float, K, Edge<K, V>> colaIndexada,
+									  Vertex<K, V> destino, float pesoAcumulado, float peso, Edge<K, V> arcoActual)
+	{
+		tablaResultado.put(destino.getId(), new NodoTS<>(pesoAcumulado + peso, arcoActual));
+		colaIndexada.insert(peso + pesoAcumulado, destino.getId(), arcoActual);
+	}
+
+	private void updateDestination(NodoTS<Float, Edge<K, V>> llegadaDestino,
+								   MinPQIndexada<Float, K, Edge<K, V>> colaIndexada,
+								   Vertex<K, V> destino, float pesoAcumulado, float peso, Edge<K, V> arcoActual)
+	{
+		llegadaDestino.setKey(pesoAcumulado + peso);
+		llegadaDestino.setValue(arcoActual);
+		colaIndexada.changePriority(destino.getId(), pesoAcumulado + peso, arcoActual);
+	}
 }
